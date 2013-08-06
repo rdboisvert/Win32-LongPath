@@ -1,5 +1,5 @@
 ##########
-# Provide file system functions for Win32 that use long paths and UTF-8.
+# Windows file functions that use very long paths and Unicode characters.
 #
 # 0.01	R. Boisvert	8/6/2013
 # First release.

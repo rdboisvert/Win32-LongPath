@@ -14,7 +14,7 @@ my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
  
 # metadata
 name            'Win32-LongPath';
-abstract        'Provide file functions that can use very long paths and Unicode characters.';
+abstract        'Windows file functions that use very long paths and Unicode.';
 author          'Robert Boisvert <rdboisvert@juno.com>';
 version         '0.01';
 license         'perl';
