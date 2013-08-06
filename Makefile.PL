@@ -3,6 +3,8 @@
 #
 # 1.0	R. Boisvert	8/6/2013
 # First release.
+# 0.02	R. Boisvert	8/6/2013
+# Fixed bugs caused by PerlCritic adjustments.
 ##########
 
 use inc::Module::Install;
@@ -16,7 +18,7 @@ my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
 name            'Win32-LongPath';
 abstract        'Windows file functions that use very long paths and Unicode.';
 author          'Robert Boisvert <rdboisvert@juno.com>';
-version         '0.01';
+version         '0.02';
 license         'perl';
 requires        'Carp' => 0;
 requires        'Encode' => 0;
