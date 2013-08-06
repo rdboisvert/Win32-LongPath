@@ -23,6 +23,8 @@ requires        'Encode' => 0;
 requires        'Fcntl' => 0;
 requires        'File::Spec::Functions' => 0;
 requires        'Time::Local' => 0;
+repository      'https://github.com/rdboisvert/Win32-LongPath';
+bugtracker      'https://github.com/rdboisvert/Win32-LongPath/issues';
 win32;
 
 # XS
@@ -36,6 +38,9 @@ cc_src_paths    'xs';
 # tests
 tests           't/*.t';
 test_requires   'Test::More' => 0;
+
+# dist
+use_ptar;
 
 # create Makefile
 WriteAll;
