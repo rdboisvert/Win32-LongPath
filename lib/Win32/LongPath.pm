@@ -2,9 +2,11 @@
 # Windows file functions that use very long paths and Unicode characters.
 #
 # 0.01	R. Boisvert	8/6/2013
-# First release.
+#	First release.
 # 0.02	R. Boisvert	8/6/2013
-# Fixed bugs caused by PerlCritic adjustments.
+#	Fixed bugs caused by PerlCritic adjustments.
+# 0.03	R. Boisvert	8/26/2013
+#	Replaced to64int with regular math.
 ##########
 
 package Win32::LongPath;
@@ -121,7 +123,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '0.02';
+  $VERSION = '0.03';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -647,7 +649,7 @@ if (!defined $oStat)
   return;
   }
 $oStat->{size} = $oStat->{size_high}
-  ? to64int ($oStat->{size_high}, $oStat->{size_low}) : $oStat->{size_low};
+  ? (($oStat->{size_high} << 32) + $oStat->{size_low}) : $oStat->{size_low};
 delete $oStat->{size_high};
 delete $oStat->{size_low};
 foreach my $sTime (qw (atime ctime mtime))
