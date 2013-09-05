@@ -1,10 +1,13 @@
 Revision history for Win32::LongPath
 
-0.01 August 6, 2013
-	- First release.
+0.04 September 5, 2013
+	- Fixed bug when stat () a file > 2 ^ 31 bytes.
+
+0.03 August 26, 2013
+	- Fixed bug when stat () a file > 2 ^ 32 bytes.
 
 0.02 August 6, 2013
 	- Fixed bugs caused by PerlCritic adjustments.
 
-0.03 August 26, 2013
-	- Fixed bug when stat () a file > 2 ^ 32 bytes.
+0.01 August 6, 2013
+	- First release.

@@ -7,6 +7,8 @@
 #	Fixed bugs caused by PerlCritic adjustments.
 # 0.03	R. Boisvert	8/26/2013
 #	Replaced to64int with regular math.
+# 0.04	R. Boisvert	9/5/2013
+#	Update to 0.4.
 ##########
 
 package Win32::LongPath;
@@ -123,7 +125,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '0.03';
+  $VERSION = '0.04';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }

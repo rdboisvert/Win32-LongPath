@@ -2,7 +2,9 @@
 ; Windows Interface
 ;
 ; 1.0	R. Boisvert	8/6/2013
-; First release.
+;	First release.
+; 1.1	R. Boisvert	9/5/2013
+;	Changed newSViv to newSVuv where needed.
 *********/
 
 #define PERL_NO_GET_CONTEXT
@@ -354,11 +356,11 @@ CODE:
 
   hv = newHV ();
   hvref = sv_2mortal (newRV_noinc ((SV *)hv));
-  if (!hv_stores (hv, "dev", newSViv (pfhi->dwVolumeSerialNumber)))
+  if (!hv_stores (hv, "dev", newSVuv (pfhi->dwVolumeSerialNumber)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "ino", newSViv (0)))
+  if (!hv_stores (hv, "ino", newSVuv (0)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "attribs", newSViv (pfhi->dwFileAttributes)))
+  if (!hv_stores (hv, "attribs", newSVuv (pfhi->dwFileAttributes)))
     { Perl_croak (aTHX_ perr_nohash); }
   if (pfhi->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     { mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO; }
@@ -383,15 +385,15 @@ CODE:
         { mode |= S_IXUSR | S_IXGRP | S_IXOTH; }
       }
     }
-  if (!hv_stores (hv, "mode", newSViv (mode)))
+  if (!hv_stores (hv, "mode", newSVuv (mode)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "nlink", newSViv (1)))
+  if (!hv_stores (hv, "nlink", newSVuv (1)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "uid", newSViv (0)))
+  if (!hv_stores (hv, "uid", newSVuv (0)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "gid", newSViv (0)))
+  if (!hv_stores (hv, "gid", newSVuv (0)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "rdev", newSViv (pfhi->dwVolumeSerialNumber)))
+  if (!hv_stores (hv, "rdev", newSVuv (pfhi->dwVolumeSerialNumber)))
     { Perl_croak (aTHX_ perr_nohash); }
   if (!hv_stores (hv, "atime",
     newSVpv (_get_DOS_time (&pfhi->ftLastAccessTime, sTime), 0)))
@@ -404,16 +406,16 @@ CODE:
     { Perl_croak (aTHX_ perr_nohash); }
   if (mode & S_IFDIR)
     {
-    if (!hv_stores (hv, "size_high", newSViv (0)))
+    if (!hv_stores (hv, "size_high", newSVuv (0)))
       { Perl_croak (aTHX_ perr_nohash); }
-    if (!hv_stores (hv, "size_low", newSViv (0)))
+    if (!hv_stores (hv, "size_low", newSVuv (0)))
       { Perl_croak (aTHX_ perr_nohash); }
     }
   else
     {
-    if (!hv_stores (hv, "size_high", newSViv (pfhi->nFileSizeHigh)))
+    if (!hv_stores (hv, "size_high", newSVuv (pfhi->nFileSizeHigh)))
       { Perl_croak (aTHX_ perr_nohash); }
-    if (!hv_stores (hv, "size_low", newSViv (pfhi->nFileSizeLow)))
+    if (!hv_stores (hv, "size_low", newSVuv (pfhi->nFileSizeLow)))
       { Perl_croak (aTHX_ perr_nohash); }
     }
   ST (0) = hvref;
@@ -443,11 +445,11 @@ CODE:
 
   hv = newHV ();
   hvref = sv_2mortal (newRV_noinc ((SV *)hv));
-  if (!hv_stores (hv, "serial", newSViv (serial_number)))
+  if (!hv_stores (hv, "serial", newSVuv (serial_number)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "maxlen", newSViv (max_comp_len)))
+  if (!hv_stores (hv, "maxlen", newSVuv (max_comp_len)))
     { Perl_croak (aTHX_ perr_nohash); }
-  if (!hv_stores (hv, "sysflags", newSViv (sys_flags)))
+  if (!hv_stores (hv, "sysflags", newSVuv (sys_flags)))
     { Perl_croak (aTHX_ perr_nohash); }
   if (!hv_stores (hv, "name", newSVpvn ((char *)pname,
     wcslen (pname) * sizeof(WCHAR))))
