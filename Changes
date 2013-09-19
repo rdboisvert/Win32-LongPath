@@ -1,5 +1,8 @@
 Revision history for Win32::LongPath
 
+1.0 September 19, 2013
+	- Official release.
+
 0.04 September 5, 2013
 	- Fixed bug when stat () a file > 2 ^ 31 bytes.
 

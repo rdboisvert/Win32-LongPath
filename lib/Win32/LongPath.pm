@@ -1,14 +1,5 @@
 ##########
 # Windows file functions that use very long paths and Unicode characters.
-#
-# 0.01	R. Boisvert	8/6/2013
-#	First release.
-# 0.02	R. Boisvert	8/6/2013
-#	Fixed bugs caused by PerlCritic adjustments.
-# 0.03	R. Boisvert	8/26/2013
-#	Replaced to64int with regular math.
-# 0.04	R. Boisvert	9/5/2013
-#	Update to 0.4.
 ##########
 
 package Win32::LongPath;
@@ -125,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '0.04';
+  $VERSION = '1.0';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -2050,7 +2041,7 @@ It has never been compiled in CygWin and most likely would not work there.
 
 =head1 AUTHOR
 
-Robert Boisvert <rdboisvert@juno.com>
+Robert Boisvert <rdbprog@gmail.com>
 
 =head1 CREDITS
 

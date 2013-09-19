@@ -8,8 +8,8 @@ my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
 # metadata
 name            'Win32-LongPath';
 abstract        'Windows file functions that use very long paths and Unicode.';
-author          'Robert Boisvert <rdboisvert@juno.com>';
-version         '0.04';
+author          'Robert Boisvert <rdbprog@gmail.com>';
+version         '1.0';
 license         'perl';
 requires        'Carp' => 0;
 requires        'Encode' => 0;
