@@ -5,6 +5,8 @@
 ;	First release.
 ; 1.1	R. Boisvert	9/5/2013
 ;	Changed newSViv to newSVuv where needed.
+; 1.2	R. Boisvert	9/20/2013
+;	Added definition of IO_REPARSE_TAG_SYMLINK if missing.
 *********/
 
 #define PERL_NO_GET_CONTEXT
@@ -50,6 +52,10 @@ typedef struct _REPARSE_DATA_BUFFER {
     } GenericReparseBuffer;
   };
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#endif
+
+#ifndef IO_REPARSE_TAG_SYMLINK
+#define IO_REPARSE_TAG_SYMLINK 0xA000000C
 #endif
 
 /**********

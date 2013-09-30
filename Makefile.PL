@@ -9,7 +9,7 @@ my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
 name            'Win32-LongPath';
 abstract        'Windows file functions that use very long paths and Unicode.';
 author          'Robert Boisvert <rdbprog@gmail.com>';
-version         '1.01';
+version         '1.02';
 license         'perl';
 requires        'Carp' => 0;
 requires        'Encode' => 0;

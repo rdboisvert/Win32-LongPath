@@ -1,5 +1,8 @@
 Revision history for Win32::LongPath
 
+1.02 September 30, 2013
+	- Really added IO_REPARSE_TAG_SYMLINK definition!
+
 1.01 September 20, 2013
 	- Added IO_REPARSE_TAG_SYMLINK definition if missing from include.
 
