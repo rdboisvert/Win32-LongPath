@@ -1,7 +1,8 @@
+use Config;
 use inc::Module::Install;
+use Win32;
 
 # determine build environment
-use Win32;
 my @vers = Win32::GetOSVersion ();
 my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
  
@@ -9,7 +10,7 @@ my $WinVer = sprintf ('0x%02x%02x', $vers [1], $vers [2]);
 name            'Win32-LongPath';
 abstract        'Windows file functions that use very long paths and Unicode.';
 author          'Robert Boisvert <rdbprog@gmail.com>';
-version         '1.02';
+version         '1.03';
 license         'perl';
 requires        'Carp' => 0;
 requires        'Encode' => 0;
@@ -23,17 +24,18 @@ win32;
 # XS
 configure_requires
                 'ExtUtils::ParseXS';
-use_ppport;
+use_ppport 3.19;
 cc_define       "-DWINVER=$WinVer -D_WIN32_WINNT=$WinVer";
 cc_warnings;
 cc_src_paths    'xs';
+makemaker_args
+  (
+  LDDLFLAGS => "$Config{lddlflags} -static-libgcc -static-libstdc++"
+  );
 
 # tests
 tests           't/*.t';
 test_requires   'Test::More' => 0;
-
-# dist
-use_ptar;
 
 # create Makefile
 WriteAll;

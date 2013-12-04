@@ -1,5 +1,10 @@
 Revision history for Win32::LongPath
 
+1.03 December 4, 2013
+	- Added support for Cygwin.
+	- Added -static options to loader.
+	- Adjusted ppport in Makefile.PL to work in older versions of ActivePerl.
+
 1.02 September 30, 2013
 	- Really added IO_REPARSE_TAG_SYMLINK definition!
 

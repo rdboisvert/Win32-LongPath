@@ -116,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.02';
+  $VERSION = '1.03';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -1691,6 +1691,8 @@ If successful, it returns the number of files changed. It returns undef if
 an error occurs, and the error variable is set to the value of the last
 error encountered.
 
+B<NOTE:> This function is not supported in Cygwin and will return an error.
+
 B<NOTE:> Different file systems have different time resolutions. For
 example, FAT has a resolution of 2 seconds for modification time and
 1 day for the access time. See the
@@ -2037,7 +2039,7 @@ B<:volflags>: system flags used by the L</volinfoL> function
 =head1 LIMITATIONS
 
 This module was developed for the Microsoft WinXP and greater environment.
-It has never been compiled in CygWin and most likely would not work there.
+It also supports the Cygwin environment.
 
 =head1 AUTHOR
 

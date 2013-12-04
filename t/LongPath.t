@@ -2,7 +2,9 @@
 # Test Win32::LongPath Functionality
 #
 # 1.0	R. Boisvert	8/5/2013
-# First release.
+#	First release.
+# 1.1	R. Boisvert	12/2/2013
+#	Disable utimeL testing on Cygwin.
 ##########
 
 use Fcntl ':mode';
@@ -249,6 +251,13 @@ sub ChangeTime
 # change file time and test
 ###########
 
+if ($^O eq 'cygwin')
+  {
+  plan tests => 1;
+  pass ('utimeL');
+  diag ('utimeL testing disabled because not fully supported in Cygwin');
+  return;
+  }
 plan tests => 4;
 my $nNewTime = time () - (2 * 60 * 60 * 24);
 ok (utimeL ($nNewTime, $nNewTime, $hFiles {newfile}->{path}),

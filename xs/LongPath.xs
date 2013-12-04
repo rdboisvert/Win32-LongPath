@@ -7,6 +7,8 @@
 ;	Changed newSViv to newSVuv where needed.
 ; 1.2	R. Boisvert	9/20/2013
 ;	Added definition of IO_REPARSE_TAG_SYMLINK if missing.
+; 1.3	R. Boisvert	12/3/2013
+;	Added support for Cygwin.
 *********/
 
 #define PERL_NO_GET_CONTEXT
@@ -75,7 +77,6 @@ STATIC bool MakeSymbolicLink (WCHAR *target, WCHAR *link, DWORD attrib)
 return CreateSymbolicLinkW (link, target,
   attrib & FILE_ATTRIBUTE_DIRECTORY ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0);
 #else
-target = link = NULL; attrib = 0; /* avoids a warning about not used */
 SetLastError (ERROR_INVALID_FUNCTION);
 return (0);
 #endif
@@ -95,6 +96,40 @@ else
   }
 return pTime;
 }
+
+/**********
+; Cygwin adjustments
+**********/
+
+#ifdef __CYGWIN__
+#include <wchar.h>
+
+#define win32_open_osfhandle _open_osfhandle
+#define _wcsicmp  wcscasecmp
+
+extern int cygwin_attach_handle_to_fd
+  (char *name, int fd, HANDLE handle, int bin, int access_mode);
+
+STATIC int _open_osfhandle (intptr_t fh, int flags)
+
+{
+int access_mode = 0;
+switch (flags)
+  {
+  case _O_RDONLY:
+    access_mode = GENERIC_READ;
+    break;
+  case _O_WRONLY:
+    access_mode = GENERIC_WRITE;
+    break;
+  case _O_RDWR:
+    access_mode = GENERIC_READ | GENERIC_WRITE;
+    break;
+  }
+return cygwin_attach_handle_to_fd
+  ("/dev/null", -1, (HANDLE) fh, -1, access_mode);
+}
+#endif
 
 /**********
 ; external functions
@@ -154,7 +189,7 @@ CODE:
   if (!hv_stores (hv, "handle", newSVuv ((UV)handle)))
     { Perl_croak (aTHX_ perr_nohash); }
   if (!hv_stores (hv, "first", newSVpvn ((char *)pinfo->cFileName,
-    wcslen (pinfo->cFileName) * sizeof(WCHAR))))
+    wcslen (pinfo->cFileName) * sizeof (WCHAR))))
     { Perl_croak (aTHX_ perr_nohash); }
 
 SV*
@@ -245,7 +280,7 @@ CODE:
   if(!FindNextFileW (handle, pinfo))
     { XSRETURN_EMPTY; }
   RETVAL = newSVpvn ((char *)pinfo->cFileName,
-    wcslen (pinfo->cFileName) * sizeof(WCHAR));
+    wcslen (pinfo->cFileName) * sizeof (WCHAR));
 OUTPUT:
   RETVAL
 
@@ -522,11 +557,16 @@ OUTPUT:
 bool
 set_filetime (time_t atime, time_t mtime, WCHAR *path)
 CODE:
+#ifdef __CYGWIN__
+  SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
+  XSRETURN_EMPTY;
+#else
   struct _utimbuf putb [1];
   putb->actime = atime;
   putb->modtime = mtime;
   if (_wutime (path, putb) == -1)
     { XSRETURN_EMPTY; }
+#endif
   RETVAL = 1;
 OUTPUT:
   RETVAL
@@ -538,69 +578,3 @@ CODE:
   RETVAL = error_code;
 OUTPUT:
   RETVAL
-
-#if 0 /* ??? historical data */
-int
-get_type (SV* varb)
-CODE:
-  IO* io;
-  if (SvROK (varb))
-    {
-    RETVAL = 9; /* reference */
-    if (sv_isobject (varb))
-      {
-      RETVAL = 10; /* object */
-      if (!strcmp (HvNAME (SvSTASH (SvRV (varb))), "Win32::LongPath"))
-        RETVAL = 13; /* longpath dir handle */
-      }
-    }
-  else
-    {
-    switch (SvTYPE (varb))
-      {
-      case SVt_IV:
-        RETVAL = 1; /* integer */
-        break;
-      case SVt_NV:
-        RETVAL = 2; /* double */
-        break;
-      case SVt_PV:
-        RETVAL = 3; /* string */
-        break;
-      case SVt_PVAV:
-        RETVAL = 4; /* array */
-        break;
-      case SVt_PVHV:
-        RETVAL = 5; /* hash */
-        break;
-      case SVt_PVCV:
-        RETVAL = 6; /* code */
-        break;
-      case SVt_PVIO:
-        RETVAL = 10; /* file handle */
-        break;
-      case SVt_PVGV:
-        RETVAL = 7; /* Glob */
-        io = GvIOn ((GV*)varb);
-        if (io)
-          {
-          if (IoIFP (io) || IoOFP (io))
-            RETVAL = 11; /* file handle */
-          if (IoDIRP (io))
-            RETVAL = 12; /* native dir handle */
-          }
-        break;
-      case SVt_PVMG:
-        RETVAL = 8; /* Magic */
-        break;
-      default:
-        if (SvOK (varb))
-          RETVAL = 100; /* unknown */
-        else
-          RETVAL = 0; /* undef */
-      }
-    }
-OUTPUT:
-  RETVAL
-
-#endif

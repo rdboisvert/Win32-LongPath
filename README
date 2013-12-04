@@ -4,8 +4,7 @@ PREREQUISITES
 =============
 This module was developed for the Windows environment. It was tested in
 WinXP and Win7 (64-bit) but should work in anything from WinXP to Win8.
-It was not designed for non-native environments (i.e. Cygwin) and probably
-would not work there.
+It was also tested in the Cygwin 1.7.25 environment.
 
 It was developed in ActivePerl 5.16 but should work with Perl 5.8.0 or later.
 
@@ -15,9 +14,6 @@ MinGW64 4.5.4 or Visual C++ 2010 Express. Please note the following:
   1. It is best to use the same compiler that was used to compile Perl itself.
 
   2. MinGW 3.4.5 created a DLL that did not work in the WinXP environment.
-
-  3. MinGW 4.6.2 required the following change to the Makefile.
-    OTHERLDFLAGS = -static-libgcc -static-libstdc++
 
 INSTALLATION
 ============
