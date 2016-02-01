@@ -541,7 +541,7 @@ sub TestAttr
 # test attributes
 ###########
 
-plan tests => 16;
+plan tests => 17;
 my $sF1 = $hFiles {newfile}->{path};
 ok (testL ('e', getcwdL (), 'getcwdL () exists'))
   or test_exit (0, 'rootdir does not exist');
@@ -571,8 +571,11 @@ ok (testL ('w', $sF1))
   or test_exit (0, 'file is not write');
 ok (!testL ('x', $sF1))
   or test_exit (0, 'file is exec');
-ok (testL ('s', $sF1) or !testL ('z', $sF1))
+my $nFSize = testL ('s', $sF1);
+ok ($nFSize or !testL ('z', $sF1))
   or test_exit (0, 'file is zero');
+ok ($nFSize == 83)
+  or test_exit (0, "file size is $nFSize instead of 83");
 if (!$bSLink)
   { pass ('no soft link capability to testL (softrel)'); }
 else

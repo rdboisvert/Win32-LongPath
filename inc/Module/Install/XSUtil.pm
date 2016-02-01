@@ -2,7 +2,7 @@ package Module::Install::XSUtil;
 
 use 5.005_03;
 
-$VERSION = '0.43';
+$VERSION = '0.45';
 
 use Module::Install::Base;
 @ISA     = qw(Module::Install::Base);
@@ -17,7 +17,7 @@ use File::Find;
 use constant _VERBOSE => $ENV{MI_VERBOSE} ? 1 : 0;
 
 my %ConfigureRequires = (
-    'ExtUtils::ParseXS' => 2.21,
+    'ExtUtils::ParseXS' => 3.18, # shipped with Perl 5.18.0
 );
 
 my %BuildRequires = (
@@ -93,6 +93,7 @@ sub _is_msvc{
         ;
     }
 
+    # cf. https://github.com/sjn/toolchain-site/blob/219db464af9b2f19b04fec05547ac10180a469f3/lancaster-consensus.md
     my $want_xs;
     sub want_xs {
         my($self, $default) = @_;
@@ -103,13 +104,26 @@ sub _is_msvc{
         $default = !$ENV{PERL_ONLY} if not defined $default;
 
         foreach my $arg(@ARGV){
-            if($arg eq '--pp'){
+
+            my ($k, $v) = split '=', $arg; # MM-style named args
+            if ($k eq 'PUREPERL_ONLY' && defined $v) {
+                return $want_xs = !$v;
+            }
+            elsif($arg eq '--pp'){ # old-style
                 return $want_xs = 0;
             }
             elsif($arg eq '--xs'){
                 return $want_xs = 1;
             }
         }
+
+        if ($ENV{PERL_MM_OPT}) {
+            my($v) = $ENV{PERL_MM_OPT} =~ /\b PUREPERL_ONLY = (\S+) /xms;
+            if (defined $v) {
+                return $want_xs = !$v;
+            }
+        }
+
         return $want_xs = $default;
     }
 }
@@ -809,7 +823,7 @@ Module::Install::XSUtil - Utility functions for XS modules
 
 =head1 VERSION
 
-This document describes Module::Install::XSUtil version 0.43.
+This document describes Module::Install::XSUtil version 0.45.
 
 =head1 SYNOPSIS
 

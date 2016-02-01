@@ -7,14 +7,18 @@ use Module::Install::Base ();
 
 use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '1.06';
+	$VERSION = '1.16';
 	@ISA     = 'Module::Install::Base';
 	$ISCORE  = 1;
 }
 
+=pod
 
+=head1 NAME
 
+Module::Install::With - find environnement for Module::Install
 
+=cut
 
 #####################################################################
 # Installer Target

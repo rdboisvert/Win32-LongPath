@@ -116,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.03';
+  $VERSION = '1.04';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -747,7 +747,7 @@ elsif ($sTest =~ /r/i)
 elsif ($sTest eq 's')
   {
   if ($oStat->{size})
-    { $nRet = 1; }
+    { $nRet = $oStat->{size}; }
   }
 elsif ($sTest =~ /w/i)
   {
@@ -1646,7 +1646,7 @@ B<r> or B<R>: Read. Always returns true.
 
 =item *
 
-B<s>: Non-zero size.
+B<s>: File has nonzero size (returns size in bytes).
 
 =item *
 
