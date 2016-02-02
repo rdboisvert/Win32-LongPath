@@ -1,3 +1,4 @@
+#line 1
 package Module::Install;
 
 # For any maintainers:

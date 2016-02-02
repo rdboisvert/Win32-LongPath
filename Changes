@@ -1,9 +1,9 @@
 Revision history for Win32::LongPath
 
-1.04 February 1, 2016
+1.04 February 2, 2016
 	- testL('s') returns file size similar to the Perl -s function (#107117)
 	- Updated Module-Install to v1.16
-	- Updated Module-Install-XSUtil to v0.45
+	- Added META.yml for CPAN compliance
 
 1.03 December 4, 2013
 	- Added support for Cygwin.

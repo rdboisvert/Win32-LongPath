@@ -1,3 +1,4 @@
+^\.git/
 ^Makefile$
 ^MYMETA
 ^ppport\.h$
