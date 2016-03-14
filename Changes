@@ -1,5 +1,9 @@
 Revision history for Win32::LongPath
 
+1.05 March 14, 2016
+	- only set Windows error, not $! (issue #2)
+	- NOTE: utimeL () test may fail if within 24 hours of DST change
+
 1.04 February 2, 2016
 	- testL('s') returns file size similar to the Perl -s function (#107117)
 	- Updated Module-Install to v1.16

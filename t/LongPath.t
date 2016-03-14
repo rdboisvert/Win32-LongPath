@@ -249,6 +249,7 @@ sub ChangeTime
 {
 ###########
 # change file time and test
+# NOTE: if DST change within 24 it will cause this to fail
 ###########
 
 if ($^O eq 'cygwin')
@@ -259,7 +260,7 @@ if ($^O eq 'cygwin')
   return;
   }
 plan tests => 4;
-my $nNewTime = time () - (2 * 60 * 60 * 24);
+my $nNewTime = time () - (60 * 60 * 24);
 ok (utimeL ($nNewTime, $nNewTime, $hFiles {newfile}->{path}),
   'utimeL (yesterday)')
   or test_exit (0, $^E);
@@ -628,13 +629,13 @@ if ($nDay)
 my $nHour = int ($nDiff / 3600);
 $nDiff -= $nHour * 3600;
 if ($sDiff or $nHour)
-  { $sDiff = ($sDiff ? "$sDiff, " : '') . "$nHour hours"; }
+  { $sDiff = ($sDiff ? "$sDiff, " : '') . "$nHour hour(s)"; }
 my $nMin = int ($nDiff / 60);
 $nDiff -= $nMin * 60;
 if ($sDiff or $nMin)
-  { $sDiff = ($sDiff ? "$sDiff, " : '') . "$nMin minutes"; }
-$sDiff = ($sDiff ? "$sDiff, " : '') . "$nDiff seconds";
-return "$sTime time: $nActual != $nExpect ($sDiff)";
+  { $sDiff = ($sDiff ? "$sDiff, " : '') . "$nMin minute(s)"; }
+$sDiff = ($sDiff ? "$sDiff, " : '') . "$nDiff second(s)";
+return "$sTime time: $nActual!=$nExpect, $sDiff";
 }
 
 sub test_exit

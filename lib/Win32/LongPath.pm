@@ -116,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.04';
+  $VERSION = '1.05';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -199,10 +199,7 @@ if (!defined $sPath)
   { return; }
 my $nAttribs = get_attribs ($sPath);
 if (!defined $nAttribs)
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 $nAttribs &= $ALL_ATTRIBS;
 my $bSet = 1;
 foreach my $sAttrib (split //, lc $sAttribs)
@@ -241,10 +238,7 @@ foreach my $sAttrib (split //, lc $sAttribs)
 ###########
 
 if (!set_attribs ($sPath, $nAttribs))
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 return 1;
 }
 
@@ -273,10 +267,9 @@ if (!defined $sPath)
   { return; }
 if (set_current_directory ($sPath))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -305,10 +298,9 @@ if (!defined $sTo)
   { return; }
 if (copy_file ($sFrom, $sTo))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -356,10 +348,9 @@ if (!defined $sFrom)
   { return; }
 if (make_hlink ($sTo, $sFrom))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -396,10 +387,9 @@ if (!defined $sPath)
   { return; }
 if (create_directory ($sPath))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -478,10 +468,7 @@ else
 ##########
 
 if (!defined $nFD)
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 if (!CORE::open ($$oFH, "$sMode&=$nFD"))
   { return; }
 if ($sLayer ne '')
@@ -519,11 +506,8 @@ if (!defined $sPath)
   { return; }
 my $sLink = find_link ($sPath);
 if (!defined $sLink)
-  {
-  _set_perl_err ();
-  return;
-  }
-_set_perl_err (0);
+  { return; }
+set_last_error (0);
 return _denormalize_path ($sLink);
 }
 
@@ -552,10 +536,9 @@ if (!defined $sTo)
   { return; }
 if (move_file ($sFrom, $sTo))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -578,10 +561,9 @@ if (!defined $sPath)
   { return; }
 if (remove_directory ($sPath))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -603,8 +585,6 @@ $sPath = _normalize_path ($sPath);
 if (!defined $sPath)
   { return ''; }
 my $sShort = get_short_path ($sPath);
-if ($sShort eq '')
-  { _set_perl_err (); }
 return _denormalize_path ($sShort);
 }
 
@@ -637,10 +617,7 @@ if (!defined $sPath)
   { return; }
 my $oStat = get_stat ($sPath, $bLStat);
 if (!defined $oStat)
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 $oStat->{size} = $oStat->{size_high}
   ? (($oStat->{size_high} << 32) + $oStat->{size_low}) : $oStat->{size_low};
 delete $oStat->{size_high};
@@ -688,10 +665,9 @@ if (!defined $sFrom)
   { return; }
 if (make_slink ($sTo, $sFrom))
   {
-  _set_perl_err (0);
+  set_last_error (0);
   return 1;
   }
-_set_perl_err ();
 return;
 }
 
@@ -811,7 +787,7 @@ foreach my $sPath (@sPaths)
 
 if ($nErr)
   {
-  _set_perl_err ($nErr);
+  set_last_error ($nErr);
   return;
   }
 return $nFiles;
@@ -866,7 +842,7 @@ foreach my $sPath (@sPaths)
 ##########
 
 if ($nErr)
-  { _set_perl_err ($nErr); }
+  { set_last_error ($nErr); }
 return $nFiles;
 }
 
@@ -899,10 +875,7 @@ else
   }
 my $oVol = get_vol_info (_normalize_path ($sPath));
 if (!defined $oVol)
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 $oVol->{name} = _wide_to_utf8 ($oVol->{name});
 return $oVol;
 }
@@ -989,12 +962,9 @@ if (!defined $sPath)
 $self->{dirpath} = _denormalize_path ($sPath);
 $self->find_first_file (_normalize_path (catfile ($sDir, '*')));
 if ($self->{handle} == 4294967295)
-  {
-  _set_perl_err ();
-  return;
-  }
+  { return; }
 $self->{first} = _denormalize_path ($self->{first});
-_set_perl_err (0);
+set_last_error (0);
 return 1;
 }
 
@@ -1134,7 +1104,7 @@ if ($sPath !~ /^\\\\\?\\/)
     { ($sVol, $sPath) = ($1, $2); }
   else
     {
-    _set_perl_err (3);
+    set_last_error (3);
     return;
     }
 
@@ -1154,7 +1124,7 @@ if ($sPath !~ /^\\\\\?\\/)
       }
     if (!@sNewDirs)
       {
-      _set_perl_err (3);
+      set_last_error (3);
       return;
       }
     pop @sNewDirs;
@@ -1174,28 +1144,6 @@ if ($sPath !~ /^\\\\\?\\/)
 ###########
 
 return $_UTF16->encode ($sPath) . "\x00";
-}
-
-###########
-# Set Perl Error
-#
-# INPUT:
-#   [Arg (1)] = Windows error code
-# OUTPUT: sets Perl $! value
-###########
-
-sub _set_perl_err
-
-{
-###########
-# o get or set Win32 error code
-# o set Perl error variable
-###########
-
-my $nErr = shift;
-$nErr = defined $nErr ? set_last_error ($nErr) : get_last_error ();
-$! = $^E;
-return;
 }
 
 ###########
