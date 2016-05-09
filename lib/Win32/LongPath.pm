@@ -469,8 +469,10 @@ else
 
 if (!defined $nFD)
   { return; }
-if (!CORE::open ($$oFH, "$sMode&=$nFD"))
+my $fh;
+if (!CORE::open ($fh, "$sMode&=$nFD"))
   { return; }
+$$oFH = $fh;
 if ($sLayer ne '')
   {
   if (!binmode $$oFH, $sLayer)

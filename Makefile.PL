@@ -36,6 +36,7 @@ makemaker_args
 # tests
 tests           't/*.t';
 test_requires   'Test::More' => 0;
+test_requires   'Devel::Refcount' => 0;
 
 # create Makefile
 WriteAll;
