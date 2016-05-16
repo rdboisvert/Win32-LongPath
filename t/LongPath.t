@@ -7,6 +7,7 @@
 #	Disable utimeL testing on Cygwin.
 ##########
 
+use Devel::Refcount qw( refcount );
 use Fcntl ':mode';
 use File::Spec::Functions;
 use Test::More;
@@ -285,7 +286,7 @@ sub CreateFile
 # o verify line count
 ###########
 
-plan tests => 5;
+plan tests => 6;
 my $oF1;
 $hFiles {newfile}->{path} = catfile ($sSubdir, $hFiles {newfile}->{name});
 if (!ok (openL (\$oF1, '>', $hFiles {newfile}->{path}), 'openL (>newfile)'))
@@ -324,6 +325,9 @@ else
     { }
   if (!eof $oF1)
     { test_exit (0, 'stopped before EOF!'); }
+  my $refcount = refcount ($oF1);
+  is ($refcount, 1, 'refcount')
+    or test_exit (0, "1 != $refcount");
   close $oF1;
   }
 ok ($nIndex == 3, 'linecount == 3?')
