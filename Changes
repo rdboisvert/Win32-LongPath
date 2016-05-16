@@ -1,5 +1,8 @@
 Revision history for Win32::LongPath
 
+1.06 May 16, 2016
+	- (andrewgregory) fixed Perl 5.22 bug opening files w/a scalar reference
+
 1.05 March 14, 2016
 	- only set Windows error, not $! (issue #2)
 	- NOTE: utimeL () test may fail if within 24 hours of DST change

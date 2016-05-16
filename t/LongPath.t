@@ -5,9 +5,11 @@
 #	First release.
 # 1.1	R. Boisvert	12/2/2013
 #	Disable utimeL testing on Cygwin.
+# 1.2	A. Gregory	5/13/2016
+#	Added refcount test.
 ##########
 
-use Devel::Refcount qw( refcount );
+use Devel::Refcount 'refcount';
 use Fcntl ':mode';
 use File::Spec::Functions;
 use Test::More;
@@ -325,9 +327,9 @@ else
     { }
   if (!eof $oF1)
     { test_exit (0, 'stopped before EOF!'); }
-  my $refcount = refcount ($oF1);
-  is ($refcount, 1, 'refcount')
-    or test_exit (0, "1 != $refcount");
+  my $nRef = refcount ($oF1);
+  is ($nRef, 1, 'refcount')
+    or test_exit (0, "Open file has unexpected refcount ($nRef)");
   close $oF1;
   }
 ok ($nIndex == 3, 'linecount == 3?')

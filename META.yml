@@ -4,6 +4,7 @@ author:
   - 'Robert Boisvert <rdbprog@gmail.com>'
 build_requires:
   Devel::PPPort: 3.19
+  Devel::Refcount: 0
   ExtUtils::MakeMaker: 6.36
   Test::More: 0
 configure_requires:
@@ -33,4 +34,4 @@ resources:
   bugtracker: https://github.com/rdboisvert/Win32-LongPath/issues
   license: http://dev.perl.org/licenses/
   repository: https://github.com/rdboisvert/Win32-LongPath
-version: '1.05'
+version: '1.06'

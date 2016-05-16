@@ -116,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.05';
+  $VERSION = '1.06';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -469,10 +469,13 @@ else
 
 if (!defined $nFD)
   { return; }
-my $fh;
-if (!CORE::open ($fh, "$sMode&=$nFD"))
+if (!CORE::open (my $oFH1, "$sMode&=$nFD"))
   { return; }
-$$oFH = $fh;
+else
+  {
+  # this avoids a bug in Perl 5.22 when opening files w/a scalar reference
+  $$oFH = $oFH1;
+  }
 if ($sLayer ne '')
   {
   if (!binmode $$oFH, $sLayer)
