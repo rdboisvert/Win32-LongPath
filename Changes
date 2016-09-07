@@ -1,5 +1,8 @@
 Revision history for Win32::LongPath
 
+1.07 September 7, 2016
+	- (pauloscustodio) fixed flags for Cygwin
+
 1.06 May 16, 2016
 	- (andrewgregory) fixed Perl 5.22 bug opening files w/a scalar reference
 

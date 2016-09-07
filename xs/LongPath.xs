@@ -9,6 +9,8 @@
 ;	Added definition of IO_REPARSE_TAG_SYMLINK if missing.
 ; 1.3	R. Boisvert	12/3/2013
 ;	Added support for Cygwin.
+; 1.4	P. Custodio	9/7/2016
+;	Fixed flags for Cygwin.
 *********/
 
 #define PERL_NO_GET_CONTEXT

@@ -116,7 +116,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.06';
+  $VERSION = '1.07';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
