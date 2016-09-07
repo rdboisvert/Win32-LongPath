@@ -116,13 +116,13 @@ STATIC int _open_osfhandle (intptr_t fh, int flags)
 int access_mode = 0;
 switch (flags)
   {
-  case _O_RDONLY:
+  case O_RDONLY:
     access_mode = GENERIC_READ;
     break;
-  case _O_WRONLY:
+  case O_WRONLY:
     access_mode = GENERIC_WRITE;
     break;
-  case _O_RDWR:
+  case O_RDWR:
     access_mode = GENERIC_READ | GENERIC_WRITE;
     break;
   }
