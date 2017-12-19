@@ -1,16 +1,10 @@
+#!/usr/bin/perl
 ##########
 # Test Win32::LongPath Functionality
-#
-# 1.0	R. Boisvert	8/5/2013
-#	First release.
-# 1.1	R. Boisvert	12/2/2013
-#	Disable utimeL testing on Cygwin.
-# 1.2	A. Gregory	5/13/2016
-#	Added refcount test.
 ##########
 
 use Devel::Refcount 'refcount';
-use Fcntl ':mode';
+use Fcntl qw'O_APPEND O_CREAT O_RDWR O_TRUNC O_WRONLY :mode';
 use File::Spec::Functions;
 use Test::More;
 use Win32;
@@ -129,6 +123,7 @@ my ($bExtAttr, $bHLink, $sRoot, $bSLink, $sSubdir);
 my %hFiles =
   (
   newfile => { name => 'famous Japanese expression お元気ですか？' },
+  newsysfile => { name => 'same in Chinese traditional 你好嗎？' },
   copy => { name => 'copy میں اپنے بھائی کے طور پر ایک ہی ہوں.' },
   hard => { name => 'hard link 세 번째 테스트' },
   softrel => { name => 'symbolic relative link 첫 번째 테스트' },
@@ -141,7 +136,8 @@ my %hFiles =
 
 subtest ('Change to root', \&ChangeRoot);
 subtest ('Create a Unicode longpath', \&CreateLong);
-subtest ('Create file', \&CreateFile);
+subtest ('Create file w/openL ()', \&CreateFileOpen);
+subtest ('Create file w/sysopenL ()', \&CreateFileSysOpen);
 subtest ('Rename/copy file', \&ChangeFile);
 subtest ('Create links', \&CreateLinks);
 subtest ('Change attributes', \&ChangeAttr);
@@ -278,6 +274,10 @@ is ($sTime, '', 'utimeL () == mtime')
   or test_exit (0, $sTime);
 }
 
+sub CreateFileOpen {CreateFile (0)}
+
+sub CreateFileSysOpen {CreateFile (1)}
+
 sub CreateFile
 
 {
@@ -289,49 +289,81 @@ sub CreateFile
 ###########
 
 plan tests => 6;
+my $bSys = $_ [0];
 my $oF1;
-$hFiles {newfile}->{path} = catfile ($sSubdir, $hFiles {newfile}->{name});
-if (!ok (openL (\$oF1, '>', $hFiles {newfile}->{path}), 'openL (>newfile)'))
-  { test_exit (0, $^E); }
+my $sFile = $bSys ? 'newsysfile' : 'newfile';
+my $sText = 'not UTF with UTF \'私の名前はボブです。\'';
+$hFiles {$sFile}->{path} = catfile ($sSubdir, $hFiles {$sFile}->{name});
+if ($bSys)
+  {
+  if (!ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_CREAT | O_TRUNC),
+    'sysopenL (O_CREAT | O_TRUNC)'))
+    { test_exit (0, $^E); }
+  else
+    { syswrite $oF1, "$sText\r\n", length ($sText) + 2; }
+  }
 else
   {
-  print $oF1 "not UTF with UTF '私の名前はボブです。'\n";
-  close $oF1;
+  if (!ok (openL (\$oF1, '>', $hFiles {$sFile}->{path}), 'openL (>newfile)'))
+    { test_exit (0, $^E); }
+  else
+    { print $oF1 "$sText\n"; }
   }
-$hFiles {newfile}->{path} = abspathL ($hFiles {newfile}->{path});
-if (!ok (openL (\$oF1, '+<', $hFiles {newfile}->{path}), 'openL (+<newfile)'))
-  { test_exit (0, $^E); }
+close $oF1;
+$hFiles {$sFile}->{path} = abspathL ($hFiles {$sFile}->{path});
+$sText = 'added 2nd line';
+if ($bSys)
+  {
+  if (!ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_RDWR),
+    'sysopenL (O_RDWR)'))
+    { test_exit (0, $^E); }
+  else
+    {
+    while (sysread $oF1, my $sEmpty, 10)
+      { }
+    syswrite $oF1, "$sText\r\n", length ($sText) + 2;
+    }
+  }
 else
   {
-  <$oF1>;
-  print $oF1 "added 2nd line\n";
-  close $oF1;
+  if (!ok (openL (\$oF1, '+<', $hFiles {$sFile}->{path}), 'openL (+<newfile)'))
+    { test_exit (0, $^E); }
+  else
+    {
+    <$oF1>;
+    print $oF1 "$sText\n";
+    }
   }
-if (!ok (openL (\$oF1, '>>', $hFiles {newfile}->{path}), 'openL (>>newfile)'))
-  { test_exit (0, $^E); }
+close $oF1;
+$sText = 'added 3rd line';
+if ($bSys)
+  {
+  if (!ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_WRONLY | O_APPEND),
+    'sysopenL (O_WRONLY | O_APPEND)'))
+    { test_exit (0, $^E); }
+  else
+    { syswrite $oF1, "$sText\r\n", length ($sText) + 2; }
+  }
 else
   {
-  print $oF1 "added 3rd line\n";
-  close $oF1;
+  if (!ok (openL (\$oF1, '>>', $hFiles {$sFile}->{path}), 'openL (>>newfile)'))
+    { test_exit (0, $^E); }
+  else
+    { print $oF1 "added 3rd line\n"; }
   }
+close $oF1;
 my $nIndex;
-if (!ok (openL (\$oF1, ':encoding(UTF-8)', $hFiles {newfile}->{path}),
+if (!ok (openL (\$oF1, ':encoding(UTF-8)', $hFiles {$sFile}->{path}),
   'openL (:UTF-8newfile)'))
-  {
-  test_exit (0, $^E);
-  $nIndex = 0;
-  }
-else
-  {
-  for ($nIndex = 0; <$oF1>; $nIndex++)
-    { }
-  if (!eof $oF1)
-    { test_exit (0, 'stopped before EOF!'); }
-  my $nRef = refcount ($oF1);
-  is ($nRef, 1, 'refcount')
-    or test_exit (0, "Open file has unexpected refcount ($nRef)");
-  close $oF1;
-  }
+  { test_exit (0, $^E); }
+for ($nIndex = 0; <$oF1>; $nIndex++)
+  { }
+if (!eof $oF1)
+  { test_exit (0, 'stopped before EOF!'); }
+my $nRef = refcount ($oF1);
+is ($nRef, 1, 'refcount')
+  or test_exit (0, "Open file has unexpected refcount ($nRef)");
+close $oF1;
 ok ($nIndex == 3, 'linecount == 3?')
   or test_exit (0, "found $nIndex lines");
 }
@@ -529,6 +561,8 @@ else
     or test_exit (0, $^E);
   }
 ok (unlinkL ($hFiles {newfile}->{path}), 'unlinkL (newfile)')
+  or test_exit (0, $^E);
+ok (unlinkL ($hFiles {newsysfile}->{path}), 'unlinkL (newsysfile)')
   or test_exit (0, $^E);
 ok (unlinkL ($hFiles {copy}->{path}), 'unlinkL (copy)')
   or test_exit (0, $^E);

@@ -1,16 +1,5 @@
 /*********
 ; Windows Interface
-;
-; 1.0	R. Boisvert	8/6/2013
-;	First release.
-; 1.1	R. Boisvert	9/5/2013
-;	Changed newSViv to newSVuv where needed.
-; 1.2	R. Boisvert	9/20/2013
-;	Added definition of IO_REPARSE_TAG_SYMLINK if missing.
-; 1.3	R. Boisvert	12/3/2013
-;	Added support for Cygwin.
-; 1.4	P. Custodio	9/7/2016
-;	Fixed flags for Cygwin.
 *********/
 
 #define PERL_NO_GET_CONTEXT
@@ -22,6 +11,7 @@
 #include "XSUB.h"
 #include "ppport.h"
 
+#include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -163,6 +153,15 @@ CODE:
     NULL, dispos, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fh == INVALID_HANDLE_VALUE)
     { XSRETURN_EMPTY; }
+  if (flags & O_TRUNC)
+    {
+    CloseHandle (fh);
+    fh = CreateFileW (path, access, FILE_SHARE_READ | FILE_SHARE_WRITE,
+      NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (fh == INVALID_HANDLE_VALUE)
+      { XSRETURN_EMPTY; }
+    flags &= ~O_TRUNC;
+    }
   fd = win32_open_osfhandle ((intptr_t)fh, flags);
   if (fd < 0)
     {

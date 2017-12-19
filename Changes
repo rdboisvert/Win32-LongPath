@@ -1,5 +1,8 @@
 Revision history for Win32::LongPath
 
+1.08 December 19, 2017
+	- (andrewgregory) added sysopenL ()
+
 1.07 September 7, 2016
 	- (pauloscustodio) fixed flags for Cygwin
 
