@@ -147,6 +147,9 @@ OUTPUT:
 
 void
 create_file (WCHAR *path, long access, long dispos, int flags)
+PREINIT:
+  PerlIO *pfh;
+  GV *gv;
 CODE:
   int fd;
   HANDLE fh = CreateFileW (path, access, FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -168,8 +171,34 @@ CODE:
     CloseHandle (fh);
     XSRETURN_EMPTY;
     }
+  char *mode;
+  if ((access & (GENERIC_READ | GENERIC_WRITE)) == (GENERIC_READ | GENERIC_WRITE))
+    { mode = "r+"; }
+  else if (access & GENERIC_WRITE)
+    { mode = "w"; }
   else
-    { XSRETURN_IV ((IV)fd); }
+    { mode = "r"; }
+  pfh = PerlIO_fdopen (fd, mode);
+  if (!pfh)
+    {
+    CloseHandle (fh);
+    XSRETURN_EMPTY;
+    }
+  char *packname = "Win32::LongPath"; packname = "IO::File";
+  gv = (GV*)SvREFCNT_inc(newGVgen(packname));
+  if (gv)
+    (void) hv_delete(GvSTASH(gv), GvNAME(gv), GvNAMELEN(gv), G_DISCARD);
+  if (gv && do_open(gv, "+>&", 3, FALSE, 0, 0, pfh))
+    {
+    ST(0) = sv_2mortal(newRV((SV*)gv));
+    sv_bless(ST(0), gv_stashpv(packname, TRUE));
+    SvREFCNT_dec(gv);
+    }
+  else
+    {
+    ST(0) = &PL_sv_undef;
+    SvREFCNT_dec(gv);
+    }
 
 bool
 find_close (SV* self)

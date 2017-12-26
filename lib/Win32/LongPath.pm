@@ -428,49 +428,30 @@ if ($sMode =~ /^([^\:]*)(\:.*)/)
   if ($sLayer eq ':')
     { croak 'invalid layer for openL!'; }
   }
-my $nFD;
+my $oFH1;
 if ($sMode eq '' or $sMode eq '<')
-  {
-  $nFD = create_file ($sPath, $GENERIC_READ, $OPEN_EXISTING, O_RDONLY);
-  $sMode = '<';
-  }
+  { $oFH1 = create_file ($sPath, $GENERIC_READ, $OPEN_EXISTING, O_RDONLY); }
 elsif ($sMode eq '+<')
   {
-  $nFD = create_file ($sPath, $GENERIC_RW, $OPEN_EXISTING, O_RDWR | O_APPEND);
-  $sMode = '>>';
+  $oFH1 = create_file
+    ($sPath, $GENERIC_RW, $OPEN_EXISTING, O_RDWR | O_APPEND);
   }
 elsif ($sMode eq '>')
-  {
-  $nFD = create_file ($sPath, $GENERIC_WRITE, $CREATE_ALWAYS, O_WRONLY);
-  $sMode = '>';
-  }
+  { $oFH1 = create_file ($sPath, $GENERIC_WRITE, $CREATE_ALWAYS, O_WRONLY); }
 elsif ($sMode eq '+>')
   {
-  $nFD = create_file ($sPath, $GENERIC_RW, $CREATE_ALWAYS, O_RDWR | O_APPEND);
-  $sMode = '>>';
+  $oFH1 = create_file
+    ($sPath, $GENERIC_RW, $CREATE_ALWAYS, O_RDWR | O_APPEND);
   }
 elsif ($sMode eq '>>')
-  {
-  $nFD = create_file ($sPath, $GENERIC_WRITE, $OPEN_ALWAYS, O_WRONLY);
-  $sMode = '>>';
-  }
+  { $oFH1 = create_file ($sPath, $GENERIC_WRITE, $OPEN_ALWAYS, O_WRONLY); }
 elsif ($sMode eq '+>>')
   {
-  $nFD = create_file ($sPath, $GENERIC_RW, $OPEN_ALWAYS, O_RDWR | O_APPEND);
-  $sMode = '>>';
+  $oFH1 = create_file ($sPath, $GENERIC_RW, $OPEN_ALWAYS, O_RDWR | O_APPEND);
   }
 else
   { croak 'invalid mode!'; }
-
-##########
-# o file descriptor valid?
-# o open as Perl file
-# o set layer with binmode
-##########
-
-if (!defined $nFD)
-  { return; }
-if (!CORE::open (my $oFH1, "$sMode&=$nFD"))
+if (!$oFH1)
   { return; }
 else
   {
@@ -691,7 +672,8 @@ sub sysopenL
 
 {
 ##########
-# check parms
+# o check parms
+# o open file
 ##########
 
 my ($oFH, $sPath, $nMode) = @_;
@@ -715,23 +697,8 @@ if ($nMode & O_CREAT)
   { $nCreate = $CREATE_ALWAYS; }
 else
   { $nCreate = $OPEN_EXISTING; }
-
-##########
-# o file descriptor valid?
-# o open as Perl file
-##########
-
-my $nFD = create_file ($sPath, $nAccess, $nCreate, $nMode);
-if (!defined $nFD)
-  { return; }
-if (!CORE::open (my $oFH1, "&=$nFD"))
-  { return; }
-else
-  {
-  # this avoids a bug in Perl 5.22 when opening files w/a scalar reference
-  $$oFH = $oFH1;
-  }
-return 1;
+$$oFH = create_file ($sPath, $nAccess, $nCreate, $nMode);
+return $$oFH ? 1 : undef;
 }
 
 ###########
