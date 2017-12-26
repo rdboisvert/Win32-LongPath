@@ -4,7 +4,7 @@
 ##########
 
 use Devel::Refcount 'refcount';
-use Fcntl qw'O_APPEND O_CREAT O_RDWR O_TRUNC O_WRONLY :mode';
+use Fcntl qw'O_APPEND O_BINARY O_CREAT O_RDWR O_TRUNC O_WRONLY :mode';
 use File::Spec::Functions;
 use Test::More;
 use Win32;
@@ -129,6 +129,12 @@ my %hFiles =
   softrel => { name => 'symbolic relative link 첫 번째 테스트' },
   softfull => { name => 'symbolic fullpath link 두 번째 테스트' },
   );
+my @sLines =
+  (
+  'not UTF with UTF 僻',
+  'added 2nd line',
+  'added 3rd line'
+  );
 
 ###########
 # tests
@@ -139,13 +145,17 @@ subtest ('Create a Unicode longpath', \&CreateLong);
 subtest ('Create file w/openL ()', sub {CreateFile (0)});
 subtest ('Create file w/sysopenL ()', sub {CreateFile (1)});
 subtest ('Rename/copy file', \&ChangeFile);
+copyL ($hFiles {newfile}->{path}, 'tmp1.txt');#???
+copyL ($hFiles {newsysfile}->{path}, 'tmp2.txt');#???
 subtest ('Create links', \&CreateLinks);
 subtest ('Change attributes', \&ChangeAttr);
-subtest ('Test attributes', \&TestAttr);
+subtest ('Test directory attributes', \&TestDirAttr);
+subtest ('Test openL () file attributes', sub {TestFileAttr (0)});
+subtest ('Test sysopenL () file attributes', sub {TestFileAttr (1)});
 subtest ('Change file times', \&ChangeTime);
 subtest ('List directory', \&ListDir);
 subtest ('Remove files', \&RemoveFile);
-done_testing (11);
+done_testing (14);
 exit;
 
 sub ChangeAttr
@@ -271,31 +281,32 @@ sub CreateFile
 # o verify line count
 ###########
 
-plan tests => 7;
+plan tests => 7 + @sLines;
 my $bSys = $_ [0];
 my $oF1;
 my $sFile = $bSys ? 'newsysfile' : 'newfile';
-my $sText = 'not UTF with UTF \'私の名前はボブです。\'';
 $hFiles {$sFile}->{path} = catfile ($sSubdir, $hFiles {$sFile}->{name});
 if ($bSys)
   {
   if (ok (sysopenL
-    (\$oF1, $hFiles {$sFile}->{path}, O_CREAT | O_TRUNC | O_WRONLY),
-    'sysopenL (O_CREAT | O_TRUNC | O_WRONLY)'))
-    { syswrite $oF1, "$sText\r\n", length ($sText) + 2; }
+    (\$oF1, $hFiles {$sFile}->{path}, O_BINARY|O_CREAT|O_TRUNC|O_WRONLY),
+    'sysopenL (O_BINARY | O_CREAT | O_TRUNC | O_WRONLY)'))
+    {
+    binmode $oF1, ':encoding(UTF-8)';
+    syswrite $oF1, "$sLines[0]\r\n";
+    }
   else
     { diag ("error=$^E"); }
   }
 else
   {
   if (ok (openL (\$oF1, '>', $hFiles {$sFile}->{path}), 'openL (>newfile)'))
-    { print $oF1 "$sText\n"; }
+    { print $oF1 "$sLines[0]\n"; }
   else
     { diag ("error=$^E"); }
   }
 close $oF1;
 $hFiles {$sFile}->{path} = abspathL ($hFiles {$sFile}->{path});
-$sText = 'added 2nd line';
 if ($bSys)
   {
   if (ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_RDWR),
@@ -303,7 +314,7 @@ if ($bSys)
     {
     while (sysread $oF1, my $sEmpty, 10)
       { }
-    syswrite $oF1, "$sText\r\n", length ($sText) + 2;
+    syswrite $oF1, "$sLines[1]\r\n";
     }
   else
     { diag ("error=$^E"); }
@@ -312,26 +323,26 @@ else
   {
   if (ok (openL (\$oF1, '+<', $hFiles {$sFile}->{path}), 'openL (+<newfile)'))
     {
-    <$oF1>;
-    print $oF1 "$sText\n";
+    while (<$oF1>)
+      { }
+    print $oF1 "$sLines[1]\n";
     }
   else
     { diag ("error=$^E"); }
   }
 close $oF1;
-$sText = 'added 3rd line';
 if ($bSys)
   {
   if (ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_APPEND | O_WRONLY),
     'sysopenL (O_APPEND | O_WRONLY)'))
-    { syswrite $oF1, "$sText\r\n", length ($sText) + 2; }
+    { syswrite $oF1, "$sLines[2]\r\n"; }
   else
     { diag ("error=$^E"); }
   }
 else
   {
   if (ok (openL (\$oF1, '>>', $hFiles {$sFile}->{path}), 'openL (>>newfile)'))
-    { print $oF1 "added 3rd line\n"; }
+    { print $oF1 "$sLines[2]\n"; }
   else
     { diag ("error=$^E"); }
   }
@@ -340,7 +351,11 @@ ok (openL (\$oF1, ':encoding(UTF-8)', $hFiles {$sFile}->{path}),
   'openL (:UTF-8newfile)') or diag ("error=$^E");
 my $nIndex;
 for ($nIndex = 0; <$oF1>; $nIndex++)
-  { }
+  {
+  if ($nIndex >= @sLines)
+    { next; }
+  is ($_, "$sLines[$nIndex]\n", 'line #' . ($nIndex + 1));
+  }
 ok (eof $oF1, 'at end of file');
 is (refcount ($oF1), 1, 'refcount');
 close $oF1;
@@ -442,12 +457,13 @@ sub ListDir
 # o examine contents
 ###########
 
-plan tests => 11;
+plan tests => 12;
 my $oDir = Win32::LongPath->new ();
 ok ($oDir, 'Win32::LongPath->new') or diag ("error=$^E");
 ok ($oDir->opendirL ($sSubdir), 'opendirL (subdir)') or diag ("error=$^E");
 my @sFound = sort $oDir->readdirL ();
-my @sExpect = ('.', '..', $hFiles {newfile}->{name}, $hFiles {copy}->{name});
+my @sExpect = ('.', '..', $hFiles {newfile}->{name},
+  $hFiles {newsysfile}->{name}, $hFiles {copy}->{name});
 if ($bHLink)
   { push @sExpect, $hFiles {hard}->{name}; }
 else
@@ -475,7 +491,7 @@ foreach my $sFile (sort @sExpect)
     }
   fail ("Content $nCount: does not match expected");
   }
-is ($nCount, scalar @sFound, 'directory count');
+is (scalar @sFound, $nCount, 'directory count');
 ok ($oDir->closedirL (), 'closedirL ()') or diag ("error=$^E");
 }
 
@@ -490,7 +506,7 @@ sub RemoveFile
 # o directory path
 ###########
 
-plan tests => (scalar @sSubdirs) + 5;
+plan tests => (scalar @sSubdirs) + 6;
 if (!$bHLink)
   { pass ('no hard link capability to unlinkL (hard)'); }
 else
@@ -525,15 +541,14 @@ for (my $nIndex = scalar @sSubdirs; $nIndex; $nIndex--)
   }
 }
 
-sub TestAttr
+sub TestDirAttr
 
 {
 ###########
-# test attributes
+# test directory attributes
 ###########
 
-plan tests => 17;
-my $sF1 = $hFiles {newfile}->{path};
+plan tests => 8;
 ok (testL ('e', getcwdL ()), 'getcwdL () exists');
 ok (testL ('d', '.'), 'rootdir is a directory');
 ok (!testL ('f', '.'), 'rootdir is not a file');
@@ -541,6 +556,21 @@ ok (testL ('r', '.'), 'rootdir is read');
 ok (testL ('w', '.'), 'rootdir is write');
 ok (testL ('x', '.'), 'rootdir is exec');
 ok (!testL ('s', '.') or testL ('z', '.'), 'rootdir is non-zero');
+if (!$bSLink)
+  { pass ('no soft link capability to testL (softrel)'); }
+else
+  { ok (testL ('l', $hFiles {softrel}->{path}), 'soft link is a link'); }
+}
+
+sub TestFileAttr
+
+{
+###########
+# test attributes
+###########
+
+plan tests => 9;
+my $sF1 = $_ [0] ? $hFiles {newsysfile}->{path} : $hFiles {newfile}->{path};
 ok (testL ('e', $sF1), 'file exists');
 ok (!testL ('d', $sF1), 'file is not a dir');
 ok (testL ('f', $sF1), 'file is a file');
@@ -550,11 +580,10 @@ ok (testL ('w', $sF1), 'file is write');
 ok (!testL ('x', $sF1), 'file is not exec');
 my $nFSize = testL ('s', $sF1);
 ok ($nFSize || !testL ('z', $sF1), 'file size is non-zero');
-is ($nFSize, 83, 'file size');
-if (!$bSLink)
-  { pass ('no soft link capability to testL (softrel)'); }
-else
-  { ok (testL ('l', $hFiles {softrel}->{path}), 'soft link is a link'); }
+my $nSize = 2;
+for (my $nIndex = 0; $nIndex < @sLines; $nIndex++)
+  { $nSize += length ($sLines [$nIndex]) + 2; }
+is ($nFSize, $nSize, 'file size');
 }
 
 ###########

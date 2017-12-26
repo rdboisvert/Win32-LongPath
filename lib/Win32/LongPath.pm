@@ -11,7 +11,8 @@ use warnings;
 
 use Carp;
 require Encode;
-use Fcntl qw(O_APPEND O_CREAT O_RDONLY O_RDWR O_TRUNC O_WRONLY :mode);
+use Fcntl
+  qw(O_APPEND O_BINARY O_CREAT O_RDONLY O_RDWR O_TRUNC O_WRONLY :mode);
 use File::Spec::Functions;
 use Time::Local;
 
@@ -432,22 +433,25 @@ my $oFH1;
 if ($sMode eq '' or $sMode eq '<')
   { $oFH1 = create_file ($sPath, $GENERIC_READ, $OPEN_EXISTING, O_RDONLY); }
 elsif ($sMode eq '+<')
+  { $oFH1 = create_file ($sPath, $GENERIC_RW, $OPEN_EXISTING, O_RDWR); }
+elsif ($sMode eq '>')
   {
   $oFH1 = create_file
-    ($sPath, $GENERIC_RW, $OPEN_EXISTING, O_RDWR | O_APPEND);
+    ($sPath, $GENERIC_WRITE, $CREATE_ALWAYS, O_TRUNC | O_WRONLY);
   }
-elsif ($sMode eq '>')
-  { $oFH1 = create_file ($sPath, $GENERIC_WRITE, $CREATE_ALWAYS, O_WRONLY); }
 elsif ($sMode eq '+>')
   {
   $oFH1 = create_file
-    ($sPath, $GENERIC_RW, $CREATE_ALWAYS, O_RDWR | O_APPEND);
+    ($sPath, $GENERIC_RW, $CREATE_ALWAYS, O_RDWR | O_TRUNC);
   }
 elsif ($sMode eq '>>')
-  { $oFH1 = create_file ($sPath, $GENERIC_WRITE, $OPEN_ALWAYS, O_WRONLY); }
+  {
+  $oFH1 = create_file
+    ($sPath, $GENERIC_WRITE, $OPEN_ALWAYS, O_APPEND | O_WRONLY);
+  }
 elsif ($sMode eq '+>>')
   {
-  $oFH1 = create_file ($sPath, $GENERIC_RW, $OPEN_ALWAYS, O_RDWR | O_APPEND);
+  $oFH1 = create_file ($sPath, $GENERIC_RW, $OPEN_ALWAYS, O_APPEND | O_RDWR);
   }
 else
   { croak 'invalid mode!'; }
@@ -698,6 +702,8 @@ if ($nMode & O_CREAT)
 else
   { $nCreate = $OPEN_EXISTING; }
 $$oFH = create_file ($sPath, $nAccess, $nCreate, $nMode);
+if ($$oFH && ($nMode & O_BINARY))
+  { binmode $$oFH; }
 return $$oFH ? 1 : undef;
 }
 

@@ -172,7 +172,8 @@ CODE:
     XSRETURN_EMPTY;
     }
   char *mode;
-  if ((access & (GENERIC_READ | GENERIC_WRITE)) == (GENERIC_READ | GENERIC_WRITE))
+  if ((access & (GENERIC_READ | GENERIC_WRITE))
+    == (GENERIC_READ | GENERIC_WRITE))
     { mode = "r+"; }
   else if (access & GENERIC_WRITE)
     { mode = "w"; }
@@ -184,20 +185,20 @@ CODE:
     CloseHandle (fh);
     XSRETURN_EMPTY;
     }
-  char *packname = "Win32::LongPath"; packname = "IO::File";
-  gv = (GV*)SvREFCNT_inc(newGVgen(packname));
+  char *packname = "IO::File";
+  gv = (GV*)SvREFCNT_inc (newGVgen (packname));
   if (gv)
-    (void) hv_delete(GvSTASH(gv), GvNAME(gv), GvNAMELEN(gv), G_DISCARD);
-  if (gv && do_open(gv, "+>&", 3, FALSE, 0, 0, pfh))
+    (void) hv_delete (GvSTASH (gv), GvNAME (gv), GvNAMELEN (gv), G_DISCARD);
+  if (gv && do_open (gv, "+>&", 3, FALSE, 0, 0, pfh))
     {
-    ST(0) = sv_2mortal(newRV((SV*)gv));
-    sv_bless(ST(0), gv_stashpv(packname, TRUE));
-    SvREFCNT_dec(gv);
+    ST(0) = sv_2mortal (newRV ((SV*)gv));
+    sv_bless (ST(0), gv_stashpv (packname, TRUE));
+    SvREFCNT_dec (gv);
     }
   else
     {
     ST(0) = &PL_sv_undef;
-    SvREFCNT_dec(gv);
+    SvREFCNT_dec (gv);
     }
 
 bool
