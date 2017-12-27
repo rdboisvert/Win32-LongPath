@@ -117,7 +117,7 @@ BEGIN
     fileattr => [@aAttribs],
     volflags => [@aVolFlags]
     );
-  $VERSION = '1.08';
+  $VERSION = '2.0';
   require XSLoader;
   XSLoader::load ('Win32::LongPath', $VERSION);
   }
@@ -698,7 +698,7 @@ elsif ($nMode & O_RDWR)
 else
   { $nAccess = $GENERIC_READ; }
 if ($nMode & O_CREAT)
-  { $nCreate = $CREATE_ALWAYS; }
+  { $nCreate = $OPEN_ALWAYS; }
 else
   { $nCreate = $OPEN_EXISTING; }
 $$oFH = create_file ($sPath, $nAccess, $nCreate, $nMode);

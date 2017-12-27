@@ -4,7 +4,7 @@
 ##########
 
 use Devel::Refcount 'refcount';
-use Fcntl qw'O_APPEND O_BINARY O_CREAT O_RDWR O_TRUNC O_WRONLY :mode';
+use Fcntl qw'O_APPEND O_CREAT O_RDONLY O_RDWR O_TRUNC O_WRONLY :mode';
 use File::Spec::Functions;
 use Test::More;
 use Win32;
@@ -22,17 +22,6 @@ BEGIN { use_ok ('Win32::LongPath', ':all') }
 ###########
 # constants
 ###########
-
-my @sSubdirs =
-  (
-  'This part of the name has spaces in it',
-  'here we add symbols that are acceptable $#!+=-,',
-  "now some extended ASCII\xA2\xA3\xA5\xAB\xBB\xC7\xC9\xE0\xE2\xE4\xE5\xE6\xE7\xE8",
-  '平仮名 ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔゕゖ',
-  'Hebrew ׆אבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ',
-  'Greek ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϐϑϒϓϔϕϖϗϘϙϚϛϜϝϞϟϠϡϢϣϤϥϦϧϨϩϪϫϬϭϮϯϰϱϲϳϴϵ϶ϷϸϹϺϻϼϽϾϿ',
-  'Cyrillic ЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡ',
-  );
 
 my @oAttChk =
   (
@@ -83,6 +72,81 @@ my @oAttribs =
   { mask => FILE_ATTRIBUTE_VIRTUAL, name => 'VIRTUAL' },
   );
 
+my %oFModes =
+  (
+  'O_APPEND' => O_APPEND,
+  'O_CREAT' => O_CREAT,
+  'O_RDWR' => O_RDWR,
+  'O_TRUNC' => O_TRUNC,
+  'O_WRONLY' => O_WRONLY,
+  );
+
+my @sLines =
+  (
+  "first line\n",
+  "appended line\n"
+  );
+
+my @oOpens =
+  (
+    {
+    append => 0,
+    create => 0,
+    mode => ['', O_RDONLY],
+    read => 1,
+    trunc => 0,
+    write => 0,
+    },
+    {
+    append => 0,
+    create => 1,
+    mode => ['>', O_CREAT | O_TRUNC | O_WRONLY],
+    read => 0,
+    trunc => 1,
+    write => 1,
+    },
+    {
+    append => 0,
+    create => 1,
+    mode => ['+>', O_CREAT | O_RDWR | O_TRUNC],
+    read => 1,
+    trunc => 1,
+    write => 1,
+    },
+    {
+    append => 0,
+    create => 0,
+    mode => ['<', O_RDONLY],
+    read => 1,
+    trunc => 0,
+    write => 0,
+    },
+    {
+    append => 0,
+    create => 0,
+    mode => ['+<', O_RDWR],
+    read => 1,
+    trunc => 0,
+    write => 1,
+    },
+    {
+    append => 1,
+    create => 1,
+    mode => ['>>', O_APPEND | O_CREAT | O_WRONLY],
+    read => 0,
+    trunc => 0,
+    write => 1,
+    },
+#    {
+#    append => 1,
+#    create => 1,
+#    mode => ['+>>', O_APPEND | O_CREAT | O_RDWR],
+#    read => 1,
+#    trunc => 0,
+#    write => 1,
+#    },
+  );
+
 my @oModes =
   (
   { mask => S_IFDIR, name => 'DIR' },
@@ -90,6 +154,17 @@ my @oModes =
   { mask => S_IRUSR, name => 'READ' },
   { mask => S_IWUSR, name => 'WRITE' },
   { mask => S_IXUSR, name => 'EXEC' },
+  );
+
+my @sSubdirs =
+  (
+  'This part of the name has spaces in it',
+  'here we add symbols that are acceptable $#!+=-,',
+  "now some extended ASCII\xA2\xA3\xA5\xAB\xBB\xC7\xC9\xE0\xE2\xE4\xE5\xE6\xE7\xE8",
+  '平仮名 ぁあぃいぅうぇえぉおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろゎわゐゑをんゔゕゖ',
+  'Hebrew ׆אבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ',
+  'Greek ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϐϑϒϓϔϕϖϗϘϙϚϛϜϝϞϟϠϡϢϣϤϥϦϧϨϩϪϫϬϭϮϯϰϱϲϳϴϵ϶ϷϸϹϺϻϼϽϾϿ',
+  'Cyrillic ЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѠѡѢѣѤѥѦѧѨѩѪѫѬѭѮѯѰѱѲѳѴѵѶѷѸѹѺѻѼѽѾѿҀҁ҂҈҉ҊҋҌҍҎҏҐґҒғҔҕҖҗҘҙҚқҜҝҞҟҠҡҢңҤҥҦҧҨҩҪҫҬҭҮүҰұҲҳҴҵҶҷҸҹҺһҼҽҾҿӀӁӂӃӄӅӆӇӈӉӊӋӌӍӎӏӐӑӒӓӔӕӖӗӘәӚӛӜӝӞӟӠӡ',
   );
 
 my @oVolFlags =
@@ -129,12 +204,6 @@ my %hFiles =
   softrel => { name => 'symbolic relative link 첫 번째 테스트' },
   softfull => { name => 'symbolic fullpath link 두 번째 테스트' },
   );
-my @sLines =
-  (
-  'not UTF with UTF 僻',
-  'added 2nd line',
-  'added 3rd line'
-  );
 
 ###########
 # tests
@@ -145,8 +214,6 @@ subtest ('Create a Unicode longpath', \&CreateLong);
 subtest ('Create file w/openL ()', sub {CreateFile (0)});
 subtest ('Create file w/sysopenL ()', sub {CreateFile (1)});
 subtest ('Rename/copy file', \&ChangeFile);
-copyL ($hFiles {newfile}->{path}, 'tmp1.txt');#???
-copyL ($hFiles {newsysfile}->{path}, 'tmp2.txt');#???
 subtest ('Create links', \&CreateLinks);
 subtest ('Change attributes', \&ChangeAttr);
 subtest ('Test directory attributes', \&TestDirAttr);
@@ -193,7 +260,7 @@ plan tests => 2;
 my $sName = 'renamed to good-bye in Russian до свидания';
 my $sF1 = catfile ($sSubdir, $sName);
 if (!ok (renameL ($hFiles {newfile}->{path}, $sF1), 'renameL (old, new)'))
-  { diag ("error=$^E"); }
+  { diag "error=$^E"; }
 else
   {
   $hFiles {newfile}->{name} = $sName;
@@ -275,91 +342,264 @@ sub CreateFile
 
 {
 ###########
-# o create long file in subdir
-# o append a line
-# o read back
-# o verify line count
+# o form file name in longpath directory
+# o calculate test count
+# o create files using various open types
 ###########
 
-plan tests => 7 + @sLines;
 my $bSys = $_ [0];
-my $oF1;
 my $sFile = $bSys ? 'newsysfile' : 'newfile';
-$hFiles {$sFile}->{path} = catfile ($sSubdir, $hFiles {$sFile}->{name});
-if ($bSys)
+my $sFPath = catfile ($sSubdir, $hFiles {$sFile}->{name});
+$hFiles {$sFile}->{path} = $sFPath;
+my $nTests = 0;
+foreach my $oOpen (@oOpens)
   {
-  if (ok (sysopenL
-    (\$oF1, $hFiles {$sFile}->{path}, O_BINARY|O_CREAT|O_TRUNC|O_WRONLY),
-    'sysopenL (O_BINARY | O_CREAT | O_TRUNC | O_WRONLY)'))
+  $nTests += 6;
+  if (!$oOpen->{create})
+    { $nTests++; }
+  if ($oOpen->{append})
+    { $nTests += 2; }
+  }
+plan tests => $nTests;
+my $oF1;
+my $bStarted;
+foreach my $oOpen (@oOpens)
+  {
+  ###########
+  # not create file?
+  ###########
+
+  if ($bStarted)
+    { unlinkL $sFPath; }
+  $bStarted = 1;
+  my $sMode;
+  if (!$bSys)
+    { $sMode = $oOpen->{mode}->[0]; }
+  else
     {
-    binmode $oF1, ':encoding(UTF-8)';
-    syswrite $oF1, "$sLines[0]\r\n";
+    $sMode = join ('|',
+      map { $oOpen->{mode}->[1] & $oFModes {$_} ? $_ : () }
+      sort keys %oFModes);
+    if (!$sMode)
+      { $sMode = 'O_RDONLY'; }
+    }
+  diag $bSys ? "testing sysopenL ($sMode)" : "testing openL ('$sMode')";
+  if (!$oOpen->{create})
+    {
+    ###########
+    # open should have an error since not create
+    ###########
+
+    my $bCreated;
+    if ($bSys)
+      {
+      if (!ok (!sysopenL (\$oF1, $sFPath, $oOpen->{mode}->[1]),
+        'sysopenL () not create file'))
+        { $bCreated = 1; }
+      }
+    else
+      {
+      if (!ok (!openL (\$oF1, $oOpen->{mode}->[0], $sFPath),
+        'openL () not create file'))
+        { $bCreated = 1; }
+      }
+
+    ###########
+    # create file if not exist
+    ###########
+
+    if (!$bCreated)
+      {
+      if ($bSys)
+        {
+        if (sysopenL (\$oF1, $sFPath, O_CREAT))
+          { $bCreated = 1; }
+        }
+      else
+        {
+        if (openL (\$oF1, '>', $sFPath))
+          { $bCreated = 1; }
+        }
+      }
+    if ($bCreated)
+      { close $oF1; }
+    }
+
+  ###########
+  # open file
+  ###########
+
+  my $bOpen;
+  if ($bSys)
+    {
+    $bOpen = ok (sysopenL (\$oF1, $sFPath, $oOpen->{mode}->[1]),
+      'sysopenL () open file');
     }
   else
-    { diag ("error=$^E"); }
-  }
-else
-  {
-  if (ok (openL (\$oF1, '>', $hFiles {$sFile}->{path}), 'openL (>newfile)'))
-    { print $oF1 "$sLines[0]\n"; }
-  else
-    { diag ("error=$^E"); }
-  }
-close $oF1;
-$hFiles {$sFile}->{path} = abspathL ($hFiles {$sFile}->{path});
-if ($bSys)
-  {
-  if (ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_RDWR),
-    'sysopenL (O_RDWR)'))
     {
-    while (sysread $oF1, my $sEmpty, 10)
-      { }
-    syswrite $oF1, "$sLines[1]\r\n";
+    $bOpen = ok (openL (\$oF1, $oOpen->{mode}->[0], $sFPath),
+      'openL () open file');
+    }
+
+  ###########
+  # test writing
+  ###########
+
+  my $bWrite;
+  if (!$bOpen)
+    {
+    fail ($bSys ? 'syswrite ()' : 'text write');
+    fail 'refcount';
+    fail 'close file';
     }
   else
-    { diag ("error=$^E"); }
-  }
-else
-  {
-  if (ok (openL (\$oF1, '+<', $hFiles {$sFile}->{path}), 'openL (+<newfile)'))
     {
-    while (<$oF1>)
-      { }
-    print $oF1 "$sLines[1]\n";
+    if ($bSys)
+      { $bWrite = syswrite $oF1, $sLines [0]; }
+    else
+      { $bWrite = print $oF1 $sLines [0]; }
+    if (!ok (!($bWrite xor $oOpen->{write}),
+      $bSys ? 'syswrite ()' : 'text write'))
+      {
+      if ($oOpen->{write})
+        { diag "error=$^E"; }
+      }
+    is (refcount ($oF1), 1, 'refcount');
+    if (!ok (close $oF1, 'close file'))
+      { diag "error=$^E"; }
+    }
+
+  ###########
+  # o write to file
+  # o test reading
+  ###########
+
+  if (!$bWrite)
+    {
+    if ($bSys)
+      {
+      if (sysopenL (\$oF1, $sFPath, O_CREAT | O_TRUNC | O_WRONLY))
+        {
+        $bWrite = syswrite $oF1, $sLines [0];
+        close $oF1;
+        }
+      }
+    else
+      {
+      if (openL (\$oF1, '>', $sFPath))
+        {
+        $bWrite = print $oF1 $sLines [0];
+        close $oF1;
+        }
+      }
+    }
+  if (!$bWrite)
+    {
+    fail ($bSys ? 'sysopenL ()' : 'openL ()');
+    fail ($bSys ? 'sysread ()' : 'text read');
+    fail ($bSys ? 'sysread () length' : 'text read length');
+    if ($oOpen->{append})
+      { fail 'append'; }
     }
   else
-    { diag ("error=$^E"); }
+    {
+    ###########
+    # o open file
+    # o check read
+    ###########
+
+    if ($bSys)
+      {
+      $bOpen = ok (sysopenL (\$oF1, $sFPath, $oOpen->{mode}->[1]),
+        'sysopenL () open file');
+      }
+    else
+      {
+      $bOpen = ok (openL (\$oF1, $oOpen->{mode}->[0], $sFPath),
+        'openL () open file');
+      }
+    if (!$bOpen)
+      {
+      diag "error=$^E";
+      fail ($bSys ? 'sysread ()' : 'text read');
+      fail ($bSys ? 'sysread () length' : 'text read length');
+      if ($oOpen->{append})
+        { fail 'append'; }
+      }
+    else
+      {
+      ###########
+      # check length
+      ###########
+
+      my $nRead;
+      if ($bSys)
+        { $nRead = sysread $oF1, my $sIgnore, 1000; }
+      else
+        {
+        my $sLine = readline $oF1;
+        if (defined $sLine)
+          { $nRead = length $sLine; }
+        }
+      if (!defined $nRead)
+        {
+        ok (!$oOpen->{read} || $oOpen->{trunc},
+          $bSys ? 'sysread ()' : 'text read');
+        }
+      else
+        {
+        if ($oOpen->{trunc})
+          { is ($nRead, 0, 'truncated read size'); }
+        else
+          { is ($nRead, length ($sLines [0]), 'read size'); }
+        }
+
+      ###########
+      # append?
+      ###########
+
+      if ($oOpen->{append})
+        {
+        ###########
+        # o check write
+        # o close, reopen, check read
+        ###########
+
+        my $bWrite;
+        if ($bSys)
+          { $bWrite = syswrite $oF1, $sLines [1]; }
+        else
+          { $bWrite = print $oF1 $sLines [1]; }
+        if (!ok ($bWrite, $bSys ? 'syswrite ()' : 'text write'))
+          { diag "error=$^E"; }
+        close $oF1;
+        if (!openL (\$oF1, '', $sFPath))
+          { fail "open to check append=$^E"; }
+        else
+          {
+          $nRead = undef;
+          if ($bSys)
+            { $nRead = sysread $oF1, my $sIgnore, 1000; }
+          else
+            {
+            local $/;
+            my $sLine = <$oF1>;
+            if (defined $sLine)
+              { $nRead = length $sLine; }
+            }
+          if (!defined $nRead)
+            { fail ($bSys ? "sysread ()=$^E" : "text read=$^E"); }
+          else
+            {
+            is ($nRead, length ($sLines [0]) + length ($sLines [1]),
+              'append size');
+            }
+          }
+        }
+      close $oF1;
+      }
+    }
   }
-close $oF1;
-if ($bSys)
-  {
-  if (ok (sysopenL (\$oF1, $hFiles {$sFile}->{path}, O_APPEND | O_WRONLY),
-    'sysopenL (O_APPEND | O_WRONLY)'))
-    { syswrite $oF1, "$sLines[2]\r\n"; }
-  else
-    { diag ("error=$^E"); }
-  }
-else
-  {
-  if (ok (openL (\$oF1, '>>', $hFiles {$sFile}->{path}), 'openL (>>newfile)'))
-    { print $oF1 "$sLines[2]\n"; }
-  else
-    { diag ("error=$^E"); }
-  }
-close $oF1;
-ok (openL (\$oF1, ':encoding(UTF-8)', $hFiles {$sFile}->{path}),
-  'openL (:UTF-8newfile)') or diag ("error=$^E");
-my $nIndex;
-for ($nIndex = 0; <$oF1>; $nIndex++)
-  {
-  if ($nIndex >= @sLines)
-    { next; }
-  is ($_, "$sLines[$nIndex]\n", 'line #' . ($nIndex + 1));
-  }
-ok (eof $oF1, 'at end of file');
-is (refcount ($oF1), 1, 'refcount');
-close $oF1;
-is ($nIndex, 3, 'linecount');
 }
 
 sub CreateLinks
@@ -580,9 +820,9 @@ ok (testL ('w', $sF1), 'file is write');
 ok (!testL ('x', $sF1), 'file is not exec');
 my $nFSize = testL ('s', $sF1);
 ok ($nFSize || !testL ('z', $sF1), 'file size is non-zero');
-my $nSize = 2;
-for (my $nIndex = 0; $nIndex < @sLines; $nIndex++)
-  { $nSize += length ($sLines [$nIndex]) + 2; }
+my $nSize = length ($sLines [0]) + length ($sLines [1]);
+if (!$_ [0])
+  { $nSize += 2; }
 is ($nFSize, $nSize, 'file size');
 }
 
