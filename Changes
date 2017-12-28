@@ -1,9 +1,10 @@
 Revision history for Win32::LongPath
 
-2.0 December 27, 2017
+2.0 December 28, 2017
 	- changed retrieval of Perl file handle
 	- added sysopenL ()
 	- improved testing
+	- the '+>>' mode for openL () doesn't work if read before write; need to investigate further
 
 1.07 September 7, 2016
 	- (pauloscustodio) fixed flags for Cygwin

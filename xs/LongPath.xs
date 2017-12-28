@@ -156,15 +156,6 @@ CODE:
     NULL, dispos, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fh == INVALID_HANDLE_VALUE)
     { XSRETURN_EMPTY; }
-  if (flags & O_TRUNC)
-    {
-    CloseHandle (fh);
-    fh = CreateFileW (path, access, FILE_SHARE_READ | FILE_SHARE_WRITE,
-      NULL, TRUNCATE_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (fh == INVALID_HANDLE_VALUE)
-      { XSRETURN_EMPTY; }
-    flags &= ~O_TRUNC;
-    }
   fd = win32_open_osfhandle ((intptr_t)fh, flags);
   if (fd < 0)
     {
