@@ -697,7 +697,9 @@ elsif ($nMode & O_RDWR)
   { $nAccess = $GENERIC_RW; }
 else
   { $nAccess = $GENERIC_READ; }
-if ($nMode & O_CREAT)
+if ($nMode & O_TRUNC)
+  { $nCreate = $CREATE_ALWAYS; }
+elsif ($nMode & O_CREAT)
   { $nCreate = $OPEN_ALWAYS; }
 else
   { $nCreate = $OPEN_EXISTING; }
