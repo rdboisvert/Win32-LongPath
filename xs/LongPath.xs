@@ -530,10 +530,28 @@ OUTPUT:
 bool
 make_slink (WCHAR *target, WCHAR *link)
 CODE:
-  DWORD attrib = GetFileAttributesW (target);
+  WCHAR *targetForCheck = NULL;
+  int targetIsAbsolute = (target[0] == '\\') || (('a' <= (target[0]|0x20) && (target[0]|0x20) <= 'z') && target[1] == ':');
+  WCHAR *linkLastSlash = wcsrchr(link, '\\');
+  if (!targetIsAbsolute && linkLastSlash!=NULL /* link in not in current dir */) {
+    size_t len1 = linkLastSlash - link + 1, len2 = wcslen(target) + 1;
+    WCHAR *buf1 = malloc((len1 + len2) * sizeof(WCHAR));
+    if (!buf1) { XSRETURN_EMPTY; }
+    memcpy(buf1,        link,   len1 * sizeof(WCHAR));
+    memcpy(buf1 + len1, target, len2 * sizeof(WCHAR));
+    targetForCheck = malloc(0x9000 * sizeof(WCHAR)); /* more than enough, 32768 is the max length */
+    if (!targetForCheck) { free(buf1); XSRETURN_EMPTY; }
+    DWORD dw = GetFullPathNameW(buf1, 0x9000, targetForCheck, NULL); /* take care on \..\ */
+    free(buf1);
+    if (0 == dw || 0x9000 < dw) { free(targetForCheck); XSRETURN_EMPTY; }
+  }
+  DWORD attrib = GetFileAttributesW (targetForCheck ? targetForCheck : target);
   if (attrib == INVALID_FILE_ATTRIBUTES)
-    { XSRETURN_EMPTY; }
+    { attrib = 0; /* create dangling symlink as link to file */ }
   RETVAL = MakeSymbolicLink (target, link, attrib);
+
+  if (targetForCheck)
+    free(targetForCheck);
 OUTPUT:
   RETVAL
 
