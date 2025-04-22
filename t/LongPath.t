@@ -547,7 +547,8 @@ foreach my $oOpen (@oOpens)
           $bSys ? 'sysread ()' : 'text read');
         # clear the error or future calls will fail
         # (readline stopped clearing the error since perl commit 80c1f1e)
-        $oF1->clearerr if !$oOpen->{read} || $oOpen->{trunc};
+        if (!$oOpen->{read} || $oOpen->{trunc})
+          { $oF1->clearerr; }
         }
       else
         {
